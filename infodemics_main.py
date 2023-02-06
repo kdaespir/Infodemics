@@ -2,6 +2,8 @@ import string
 import pandas as pd
 import numpy as np
 import re
+from nltk.stem import WordNetLemmatizer
+
 
 
 
@@ -47,15 +49,29 @@ class infod_classification:
 
     def cleaning(self):
         self.cleaned_text = self.text.str.lower()
-        for char in self.cleaned_text:
-            if type(char) != type(""):
+        for text in self.cleaned_text:
+            text = de_emojify(str(text))
+            if type(text) != type(""):
                 continue
-            if char in string.punctuation:
-                self.cleaned_text = self.cleaned_text.replace(char, "")
+            if text in string.punctuation:
+                self.cleaned_text = self.cleaned_text.replace(text, "")
         
+        # Removes all retweets at other users
         self.cleaned_text = self.cleaned_text.replace(to_replace=r'rt @.+? ', value="", regex=True)
+        
+        # Removes all links that are found in the beginning or middle of the text
         self.cleaned_text = self.cleaned_text.replace(to_replace=r'(htpps|http).+? ', value="", regex=True)
+        
+        # Removes all links that are found at the end of the text
         self.cleaned_text = self.cleaned_text.replace(to_replace=r'(htpps|http).+', value="", regex=True)
+
+        #removes all single characters from the text
+        self.cleaned_text = self.cleaned_text.replace(to_replace=r'\^[a-zA-Z]\s+', value=' ', regex=True)
+
+        # substitutes multiple blank characters with a single one
+        self.cleaned_text = self.cleaned_text.replace(to_replace=r'\s+', value=' ', regex=True)
+        
+        # Removes beginning of text, if the text begins with a blank charcter
         self.cleaned_text = self.cleaned_text.replace(to_replace=r"(^ +)", value="", regex=True)
 
     def finalize(self):
@@ -69,3 +85,6 @@ if __name__ == "__main__":
     x = infod_classification()
     x.cleaning()
     x.finalize()
+
+    # text = "everything is a family affair these days😭🙈and we wouldnt have it any other way.."
+    # print(de_emojify(text))
