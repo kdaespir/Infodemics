@@ -2,8 +2,10 @@ import string
 import pandas as pd
 import numpy as np
 import re
+import nltk
 from nltk.stem import WordNetLemmatizer
 
+# _ = nltk.download("all")
 
 
 
@@ -44,7 +46,6 @@ class infod_classification:
         self.dataset = pd.concat([non_miss_data, miss_data], axis=0)
         self.dataset = self.dataset.drop(["Number"], axis=1)
         self.text = self.dataset["Tweet"]
-
         pass
 
     def preprocess(self):
@@ -74,10 +75,27 @@ class infod_classification:
         # Removes beginning of text, if the text begins with a blank charcter
         self.cleaned_text = self.cleaned_text.replace(to_replace=r"(^ +)", value="", regex=True)
 
-
-    def finalize(self):
         self.dataset["Tweet"] = self.cleaned_text
+        self.dataset = self.dataset.dropna(axis=0)
+        self.cleaned_text = self.cleaned_text.dropna(axis=0)
+
+        self.stemmed_texts = []
+        stemmer = WordNetLemmatizer()
+        for sentence in self.cleaned_text:
+            if type(sentence) == type(float(3.3)):
+                print(sentence)
+                exit()
+            lis_words = sentence.split(" ")
+            stemmed = [stemmer.lemmatize(word) for word in lis_words ]
+            stemmed = " ".join(stemmed)
+            self.stemmed_texts += [stemmed]
+        
+        self.dataset["Tweet"] = self.stemmed_texts
+        # print(len(self.stemmed_texts))
+    def finalize(self):
         print(self.dataset)
+        # self.dataset["Tweet"] = self.cleaned_text
+        # print(self.dataset)
 
 
 
