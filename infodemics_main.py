@@ -74,6 +74,7 @@ class infod_classification:
         # Removes beginning of text, if the text begins with a blank charcter
         self.cleaned_text = self.cleaned_text.replace(to_replace=r"(^ +)", value="", regex=True)
 
+        
     def finalize(self):
         self.dataset["Tweet"] = self.cleaned_text
         print(self.dataset)
