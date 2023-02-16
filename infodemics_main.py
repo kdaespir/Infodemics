@@ -4,6 +4,7 @@ import numpy as np
 import re
 import nltk
 from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer
 
 # _ = nltk.download("all")
 
@@ -92,6 +93,12 @@ class infod_classification:
         
         self.dataset["Tweet"] = self.stemmed_texts
         # print(len(self.stemmed_texts))
+
+    def vectorize(self):
+
+        vectorizer = CountVectorizer(binary=True, stop_words="english")
+        vectorizer.fit(np.array(self.dataset["Tweet"]))
+        
     def finalize(self):
         print(self.dataset)
         # self.dataset["Tweet"] = self.cleaned_text
