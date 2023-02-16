@@ -47,7 +47,7 @@ class infod_classification:
 
         pass
 
-    def cleaning(self):
+    def preprocess(self):
         self.cleaned_text = self.text.str.lower()
         for text in self.cleaned_text:
             text = de_emojify(str(text))
@@ -74,7 +74,7 @@ class infod_classification:
         # Removes beginning of text, if the text begins with a blank charcter
         self.cleaned_text = self.cleaned_text.replace(to_replace=r"(^ +)", value="", regex=True)
 
-        
+
     def finalize(self):
         self.dataset["Tweet"] = self.cleaned_text
         print(self.dataset)
@@ -84,7 +84,7 @@ class infod_classification:
 
 if __name__ == "__main__":
     x = infod_classification()
-    x.cleaning()
+    x.preprocess()
     x.finalize()
 
     # text = "everything is a family affair these days😭🙈and we wouldnt have it any other way.."
