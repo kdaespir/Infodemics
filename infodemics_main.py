@@ -89,6 +89,7 @@ class infod_classification:
 
         self.stemmed_texts = []
         stemmer = WordNetLemmatizer()
+        # stemmer = PorterStemmer()
         for sentence in self.cleaned_text:
             if type(sentence) == type(float(3.3)):
                 print(sentence)
@@ -102,7 +103,7 @@ class infod_classification:
 
     def splits(self):
         self.xtrain, self.xtest, self.ytrain, self.ytest = train_test_split\
-            (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0, shuffle=True)
+            (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0)#, shuffle=True)
     def vectorize(self):
 
         # vectorizer = CountVectorizer(binary=True, stop_words="english")
