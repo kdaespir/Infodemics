@@ -5,7 +5,9 @@ import re
 import nltk
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
-
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 # _ = nltk.download("all")
 
 
@@ -92,8 +94,10 @@ class infod_classification:
             self.stemmed_texts += [stemmed]
         
         self.dataset["Tweet"] = self.stemmed_texts
-        # print(len(self.stemmed_texts))
 
+    def splits(self):
+        self.xtrain, self.xtest, self.ytrain, self.ytest = train_test_split\
+            (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0, shuffle=True)
     def vectorize(self):
 
         vectorizer = CountVectorizer(binary=True, stop_words="english")
@@ -111,6 +115,6 @@ if __name__ == "__main__":
     x = infod_classification()
     x.preprocess()
     x.finalize()
-
+    x.vectorize()
     # text = "everything is a family affair these days😭🙈and we wouldnt have it any other way.."
     # print(de_emojify(text))
