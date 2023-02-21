@@ -3,11 +3,16 @@ import pandas as pd
 import numpy as np
 import re
 import nltk
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import CountVectorizer
+from nltk.stem import WordNetLemmatizer, PorterStemmer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.models import Sequential
+
 # _ = nltk.download("all")
 
 
@@ -100,21 +105,45 @@ class infod_classification:
             (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0, shuffle=True)
     def vectorize(self):
 
-        vectorizer = CountVectorizer(binary=True, stop_words="english")
-        vectorizer.fit(np.array(self.dataset["Tweet"]))
+        # vectorizer = CountVectorizer(binary=True, stop_words="english")
+        vectorizer = TfidfVectorizer(binary=True, stop_words="english")
+        vectorizer.fit(list(self.xtrain), list(self.xtest))
         
-    def finalize(self):
-        print(self.dataset)
-        # self.dataset["Tweet"] = self.cleaned_text
-        # print(self.dataset)
+        self.xtrain_vec = vectorizer.transform(self.xtrain)
+        self.xtest_vec = vectorizer.transform(self.xtest)
 
+    def knn_model(self, k):
+        knn = KNeighborsClassifier(n_neighbors=k, weights="uniform")
+        knn.fit(self.xtrain_vec, self.ytrain)
+        pred = knn.predict(self.xtest_vec)
+        model_acc = accuracy_score(self.ytest, pred)
+        print(f"KNN, k=3 accuracy is {round(model_acc * 100, 2)}%")
+
+    def svc_model(self):
+        model = svm.SVC(kernel="linear", probability=True)
+        prob = model.fit(self.xtrain_vec, self.ytrain).predict_proba(self.xtest_vec)
+        pred = model.predict(self.xtest_vec)
+        model_acc = accuracy_score(self.ytest, pred)
+        print(f"SVC model accuracy is {round(model_acc * 100, 2)}%")
+
+    def rf_model(self):
+        model = RandomForestClassifier()
+        model.fit(self.xtrain_vec,self.ytrain)
+        pred = model.predict(self.xtest_vec)
+        model_acc = accuracy_score(self.ytest, pred)
+        print(f"RF model accuracy is {round(model_acc * 100, 2)}%")
+
+    def finalize(self):
+        pass
 
 
 
 if __name__ == "__main__":
     x = infod_classification()
     x.preprocess()
-    x.finalize()
+    x.splits()
     x.vectorize()
-    # text = "everything is a family affair these days😭🙈and we wouldnt have it any other way.."
-    # print(de_emojify(text))
+    x.knn_model(3)
+    x.svc_model()
+    x.rf_model()
+    x.finalize()
