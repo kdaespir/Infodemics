@@ -87,6 +87,8 @@ class infod_classification:
         self.dataset = self.dataset.dropna(axis=0)
         self.cleaned_text = self.cleaned_text.dropna(axis=0)
 
+    def stem(self):
+        
         self.stemmed_texts = []
         stemmer = WordNetLemmatizer()
         # stemmer = PorterStemmer()
@@ -148,3 +150,4 @@ if __name__ == "__main__":
     x.svc_model()
     x.rf_model()
     x.finalize()
+
