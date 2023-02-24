@@ -12,6 +12,7 @@ from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.models import Sequential
+from langdetect import detect
 
 # _ = nltk.download("all")
 
@@ -55,6 +56,18 @@ class infod_classification:
         self.dataset = self.dataset.drop(["Number"], axis=1)
         self.text = self.dataset["Tweet"]
         pass
+    
+    def engl_only(self):
+        eng_text = []
+        for tweet in self.text:
+            try:
+                eng_text += [detect(tweet)]
+            except:
+                eng_text += [False]
+                Exception
+        eng_bool = [item == "en" for item in eng_text]
+        self.dataset["en_label"] = eng_bool
+        self.dataset = self.dataset[self.dataset["en_label"] == True]
 
     def preprocess(self):
         self.cleaned_text = self.text.str.lower()
@@ -87,19 +100,24 @@ class infod_classification:
         self.dataset = self.dataset.dropna(axis=0)
         self.cleaned_text = self.cleaned_text.dropna(axis=0)
 
-    def stem(self):
+    def stem(self, stem = "wordnet"):
         
         self.stemmed_texts = []
-        stemmer = WordNetLemmatizer()
-        # stemmer = PorterStemmer()
-        for sentence in self.cleaned_text:
-            if type(sentence) == type(float(3.3)):
-                print(sentence)
-                exit()
-            lis_words = sentence.split(" ")
-            stemmed = [stemmer.lemmatize(word) for word in lis_words ]
-            stemmed = " ".join(stemmed)
-            self.stemmed_texts += [stemmed]
+        if stem == "wordnet":
+            stemmer = WordNetLemmatizer()
+            for sentence in self.cleaned_text:
+                lis_words = sentence.split(" ")
+                stemmed = [stemmer.lemmatize(word) for word in lis_words ]
+                stemmed = " ".join(stemmed)
+                self.stemmed_texts += [stemmed]
+        else:
+            stemmer = PorterStemmer()
+            for sentence in self.cleaned_text:
+                lis_words = sentence.split(" ")
+                stemmed = [stemmer.stem(word) for word in lis_words]
+                stemmed = " ".join(stemmed)
+                self.stemmed_texts += [stemmed]
+
         
         self.dataset["Tweet"] = self.stemmed_texts
 
@@ -143,7 +161,9 @@ class infod_classification:
 
 if __name__ == "__main__":
     x = infod_classification()
+    x.engl_only()
     x.preprocess()
+    x.stem(stem="")
     x.splits()
     x.vectorize()
     x.knn_model(3)
