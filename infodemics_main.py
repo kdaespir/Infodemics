@@ -154,6 +154,8 @@ class infod_classification:
         model_acc = accuracy_score(self.ytest, pred)
         print(f"RF model accuracy is {round(model_acc * 100, 2)}%")
 
+    def lstm_model(self):
+        model = Sequential(layers=LSTM)
     def finalize(self):
         pass
 
