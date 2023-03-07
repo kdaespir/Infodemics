@@ -1,0 +1,9 @@
+When using algorithm to remove all non english tweets
+KNN, k=3 accuracy is 19.06%
+SVC model accuracy is 21.39%
+RF model accuracy is 17.46%
+
+When not using the algorithm to remove all non english tweets
+KNN, k=3 accuracy is 41.39%
+SVC model accuracy is 20.58%
+RF model accuracy is 16.93%

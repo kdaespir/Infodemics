@@ -10,6 +10,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.decomposition import TruncatedSVD
+from sklearn.pipeline import Pipeline, make_pipeline
+from imblearn.over_sampling import RandomOverSampler
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.models import Sequential
 from langdetect import detect
@@ -59,7 +62,7 @@ class infod_classification:
     
     def engl_only(self):
         eng_text = []
-        for tweet in self.text:
+        for tweet in self.dataset["Tweet"]:
             try:
                 eng_text += [detect(tweet)]
             except:
@@ -68,6 +71,7 @@ class infod_classification:
         eng_bool = [item == "en" for item in eng_text]
         self.dataset["en_label"] = eng_bool
         self.dataset = self.dataset[self.dataset["en_label"] == True]
+        self.text = self.dataset["Tweet"]
 
     def preprocess(self):
         self.cleaned_text = self.text.str.lower()
@@ -121,22 +125,48 @@ class infod_classification:
         
         self.dataset["Tweet"] = self.stemmed_texts
 
+    def vectorize(self):
+        # vectorizer = CountVectorizer(binary=True, stop_words="english")
+        self.tfidf = TfidfVectorizer(binary=True, stop_words="english")
+        self.csr_mat = self.tfidf.fit_transform(list(self.dataset["Tweet"]))
+        self.words = self.tfidf.get_feature_names_out()
+        
+    def dim_redu(self):
+        self.tfid_array = pd.DataFrame(self.csr_mat.toarray(), columns=self.words)
+        svd = TruncatedSVD(random_state=None, n_components=5)
+        self.dr_text = svd.fit_transform(self.csr_mat)
+        print(self.dr_text)
+
+        pass
+    
+    
     def splits(self):
         self.xtrain, self.xtest, self.ytrain, self.ytest = train_test_split\
-            (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0)#, shuffle=True)
-    def vectorize(self):
-
-        # vectorizer = CountVectorizer(binary=True, stop_words="english")
-        vectorizer = TfidfVectorizer(binary=True, stop_words="english")
-        vectorizer.fit(list(self.xtrain), list(self.xtest))
+            (self.dr_text, self.dataset["Label"], test_size=0.3, random_state=0)
         
-        self.xtrain_vec = vectorizer.transform(self.xtrain)
-        self.xtest_vec = vectorizer.transform(self.xtest)
+        # self.xtrain, self.xtest, self.ytrain, self.ytest = train_test_split\
+        #     (self.dataset["Tweet"], self.dataset["Label"], test_size=0.3, random_state=0)#, shuffle=True)
+        # self.xtrain_vec = self.tfidf.transform(self.xtrain)
+        # self.xtest_vec = self.tfidf.transform(self.xtest)
+        training_data = pd.DataFrame(self.xtrain,self.ytrain)
+        print(training_data)
+    def ovsampl(self):
+        ros = RandomOverSampler(random_state=0)
+        self.xtrain_ros, self.ytrain_ros = ros.fit_resample(self.xtrain, self.ytrain)
 
+    def pipelines(self):
+        svd = TruncatedSVD()
+        ros = RandomOverSampler()
+        knn = KNeighborsClassifier(n_neighbors=3, weights="uniform")
+        knn_pipeline = make_pipeline(svd, knn)
+        knn_pipeline.fit(self.csr_mat)
+        labels = knn_pipeline.predict(self.csr_mat)
+        print(labels)
+        
     def knn_model(self, k):
         knn = KNeighborsClassifier(n_neighbors=k, weights="uniform")
-        knn.fit(self.xtrain_vec, self.ytrain)
-        pred = knn.predict(self.xtest_vec)
+        knn.fit(self.xtrain, self.ytrain)
+        pred = knn.predict(self.xtest)
         model_acc = accuracy_score(self.ytest, pred)
         print(f"KNN, k=3 accuracy is {round(model_acc * 100, 2)}%")
 
@@ -154,8 +184,8 @@ class infod_classification:
         model_acc = accuracy_score(self.ytest, pred)
         print(f"RF model accuracy is {round(model_acc * 100, 2)}%")
 
-    def lstm_model(self):
-        model = Sequential(layers=LSTM)
+    # def lstm_model(self):
+    #     model = Sequential(layers=LSTM)
     def finalize(self):
         pass
 
@@ -163,13 +193,16 @@ class infod_classification:
 
 if __name__ == "__main__":
     x = infod_classification()
-    x.engl_only()
+    # x.engl_only()
     x.preprocess()
-    x.stem(stem="")
-    x.splits()
+    x.stem(stem="wordnet")
     x.vectorize()
+    x.dim_redu()
+    x.splits()
+    # x.ovsampl()
+    # x.pipelines()
     x.knn_model(3)
-    x.svc_model()
-    x.rf_model()
-    x.finalize()
+    # x.svc_model()
+    # x.rf_model()
+    # x.finalize()
 
